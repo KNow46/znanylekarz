@@ -1,8 +1,12 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, PermissionsMixin
 from django.db.models import ForeignKey
+from django.utils import timezone
+from datetime import timedelta
 
 
 class CustomUserManager(BaseUserManager):
@@ -80,9 +84,18 @@ class Doctor(CustomUser):
     specialization = models.CharField(max_length=100)
     license_number = models.CharField(max_length=50, unique=True)
     city = models.CharField(max_length=50)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.specialization})"
+
+    @property
+    def rating(self):
+        opinions = Opinion.objects.filter(doctor=self.id)
+        if len(opinions) > 0:
+            return ("%.2f" % (sum(opinion.rating for opinion in opinions) / len(opinions)))
+        else:
+            return '?'
 
 class Patient(CustomUser):
     def __str__(self):
@@ -102,14 +115,12 @@ class Opinion(models.Model):
         return f'Opinion by {self.patient} for {self.doctor}'
 
 
-class Calendar(models.Model):
-    doctor = models.OneToOneField(Doctor, on_delete=models.CASCADE)
 
 class Appointment(models.Model):
     date = models.DateField()
     start = models.TimeField()
     duration = models.DurationField()
-    calendar = ForeignKey(Calendar, on_delete=models.CASCADE)
+    doctor = ForeignKey(Doctor, on_delete=models.CASCADE)
     patient = models.ForeignKey(
         'Patient',
         on_delete=models.SET_NULL,
@@ -119,3 +130,20 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.start} ({self.duration})"
+
+class CustomToken(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(days=1)  # token expires after 1 day
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Token for {self.user.email}"

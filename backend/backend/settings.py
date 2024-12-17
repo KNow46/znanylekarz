@@ -24,12 +24,35 @@ SECRET_KEY = 'django-insecure-_c457ho3rx6ivpm()&@fwmsyzu394zz-@xrk(qeeziui6(emml
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authtoken',
+    'authorization',
+]
 
-ALLOWED_HOSTS = ['127.0.0.1','http://localhost:3000', 'localhost']
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:8000',
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = False
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
+CORS_ALLOW_HEADERS = [
+    'Content-Type',
+    'Authorization',
+    'X-CSRFToken',
 ]
 
 # Application definition
@@ -45,6 +68,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',
     'drf_yasg',
+    'django_extensions',
+    'django_filters',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -136,8 +162,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "staticfiles",
     "/home/krzysztof-noworyta/projects/znanylekarz/.venv/lib/python3.12/site-packages/drf_yasg/templates/"
 ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+}
+
+

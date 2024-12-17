@@ -20,8 +20,11 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from api.views import DoctorListView
+from api.views import (DoctorView, AppointmentView,
+                       PatientView, OpinionView, EmailAuthToken, CheckTokenView)
+from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import SimpleRouter
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -37,7 +40,10 @@ schema_view = get_schema_view(
 )
 
 router = SimpleRouter()
-router.register(r'doctors', DoctorListView, basename='api-doctors')
+router.register(r'doctors', DoctorView, basename='api-doctors')
+router.register(r'appointments', AppointmentView, basename='api-appointments')
+router.register(r'patients',PatientView, basename='api-patients')
+router.register(r'opinions',OpinionView, basename='api-opinions')
 
 
 urlpatterns = [
@@ -45,6 +51,7 @@ urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('', include(router.urls)),
-
+    path('token-auth/', EmailAuthToken.as_view(), name='api_token_auth'),
+    path('check-token/', CheckTokenView.as_view(), name='api_check_token')
 ]
 
